@@ -31,7 +31,22 @@ const userSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: false
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
+    },
+    userID: {
+        type: Number,
+    },
+    resetPassToken: {
+        type: String
     }
+
 },
     { timestamps: true }
 );

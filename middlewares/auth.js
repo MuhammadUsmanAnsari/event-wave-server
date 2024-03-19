@@ -7,13 +7,13 @@ module.exports.protect = (...roles) => trycatch(async (req, res, next) => {
     const { id, role } = await jwt.verify(jwtoken, process.env.JWT_SECRET);
     if (roles.includes(role)) {
         if (role == "organizer") {
-            const organizer = await User.find({ _id: id, role });
+            const organizer = await User.findOne({ _id: id, role });
             if (!organizer) return res.status(401).json({ authorized: false });
             organizer.role = role;
             req.user = organizer;
             next();
         } else if (role == "attendee") {
-            const attendee = await User.find({ _id: id, role });
+            const attendee = await User.findOne({ _id: id, role });
 
             if (!attendee || !attendee.isActive)
                 return res.status(401).json({ authorized: false });
