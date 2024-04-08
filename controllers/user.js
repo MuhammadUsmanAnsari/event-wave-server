@@ -4,6 +4,13 @@ const nodemailer = require('nodemailer')
 const User = require('../models/User')
 const OTPverification = require('../models/OTPverification')
 const randomstring = require("randomstring");
+const multer = require('multer')
+const fs = require('fs')
+const uuid = require("uuid").v4;
+const trycatch = require("../middlewares/tryCatch");
+const path = require("path");
+const { v4: uuidv4 } = require('uuid');
+
 
 
 let transporter = nodemailer.createTransport({
@@ -264,54 +271,97 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 // get user data
 const getUser = asyncHandler(async (req, res) => {
-    return res.status(200).json({ msg: req.user })
+    try {
+        return res.status(200).json({ data: req.user })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
 })
 
 
 // update user
 const updateUser = asyncHandler(async (req, res) => {
-    const { password, email, name, image } = req.body
-    let updatedData;
+    let { id } = req.query;
+    try {
 
-    if (password && image) {
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
-        updatedData = {
-            ...req.body,
-            password: hashedPassword,
-            image
+        const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true })
+        if (updatedUser) {
+            return res.status(201).json({ success: true, msg: "User updated successfully!" })
+        } else {
+            return res.status(400).json({ error: "Invalid User Data" })
         }
-    } else if (password) {
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
-        updatedData = {
-            ...req.body,
-            password: hashedPassword,
-        }
-    } else if (image) {
-        updatedData = {
-            ...req.body,
-            image
-        }
-    } else {
-        updatedData = { ...req.body }
-    }
-
-
-    const updatedUser = await User.findByIdAndUpdate(req.body._id, updatedData, { new: true })
-    if (updatedUser) {
-        let data = {
-            name: updatedUser.name,
-            email: updatedUser.email,
-            _id: updatedUser._id,
-            image: updatedUser.image,
-            token: generateToken(req.body._id)
-        }
-        res.status(201).json(data)
-    } else {
-        res.status(400).json({ error: "Invalid User Data" })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
     }
 })
+
+// update user password
+const updateUserPassword = asyncHandler(async (req, res) => {
+    let { id, oldPassword, password } = req.query;
+    try {
+        let user = await User.findById(id);
+
+        let checkPass = await bcrypt.compare(oldPassword, user.password);
+        if (checkPass) {
+            const salt = await bcrypt.genSalt(10)
+            const hashedPassword = await bcrypt.hash(password, salt);
+            user.password = hashedPassword;
+            user.save();
+            return res.status(200).json({ success: true, msg: "Password changed successfully!" })
+        } else {
+            return res.status(400).json({ success: false, message: "Your old password doesn't match" })
+        }
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+})
+
+// upload image
+const uploaded = async (req, res) => {
+    const { id, image } = req.body;
+    try {
+        let user = await User.findById(id);
+        if (user) {
+            if (user.image !== "/users/no-image.jpg") {
+                // Extract the filename from the existing image path
+                const existingFilename = user?.image.split('/').pop();
+                // Check if the file exists in the directory
+                const existingFilePath = path.join(__dirname, "..", 'public/users', existingFilename);
+                if (fs.existsSync(existingFilePath)) {
+                    // If the file exists, delete it
+                    fs.unlinkSync(existingFilePath);
+                }
+            }
+
+
+            const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const filename = `image_${uuidv4()}.png`;
+            const uploadDir = path.join(__dirname, "..", 'public/users');
+
+            // Check if the upload directory exists, create it if it doesn't
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+
+            // Save image to file
+            const filePath = path.join(uploadDir, filename);
+            fs.writeFileSync(filePath, buffer);
+            let fullFileName = `/users/${filename}`
+            user.image = fullFileName;
+            user.save();
+            return res.status(200).json({ success: true, msg: "User updated successfully" })
+        }
+
+
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ success: false, message: error.message })
+    }
+};
 
 
 
@@ -319,9 +369,11 @@ module.exports = {
     registerUser,
     loginUser,
     updateUser,
+    updateUserPassword,
     verifyOTP,
     resendOTP,
     forgotPassword,
     resetPassword,
     getUser,
+    uploaded
 }
