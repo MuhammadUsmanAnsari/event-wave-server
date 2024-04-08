@@ -7,6 +7,9 @@ const {
     forgotPassword,
     resetPassword,
     getUser,
+    updateUser,
+    updateUserPassword,
+    uploaded,
 } = require('../controllers/user');
 const { protect } = require("../middlewares/auth");
 
@@ -17,8 +20,20 @@ router.post('/verifyOTP', verifyOTP)
 router.post('/resendOTP', resendOTP)
 router.post('/forgotPassword', forgotPassword)
 router.put('/resetPassword', resetPassword)
+
+// user management
 router.route("/getUser")
     .get(protect("organizer", "attendee"), getUser);
+
+router.route("/updateUser")
+    .put(protect("organizer", "attendee"), updateUser);
+router.route("/updateUserPassword")
+    .put(protect("organizer", "attendee"), updateUserPassword);
+
+router.route("/uploadImage")
+    .post(protect("organizer", "attendee"), uploaded);
+
+
 
 
 module.exports = router;

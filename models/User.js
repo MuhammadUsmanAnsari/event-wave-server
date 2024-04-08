@@ -22,6 +22,50 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
     },
+    phone: {
+        type: String,
+    },
+    profession: {
+        type: String,
+    },
+    country: {
+        type: String,
+    },
+    city: {
+        type: String,
+    },
+    image: {
+        type: String,
+        maxlength: 100,
+        default: "/users/no-image.jpg",
+    },
+    followers: {
+        type: Array,
+    },
+    following: {
+        type: Array,
+    },
+    facebookLink: {
+        type: String,
+    },
+    instagramLink: {
+        type: String,
+    },
+    tiktokLink: {
+        type: String,
+    },
+    pinterestLink: {
+        type: String,
+    },
+    twitterLink: {
+        type: String,
+    },
+    webLink: {
+        type: String,
+    },
+    description: {
+        type: String,
+    },
     password: {
         type: String,
     },
