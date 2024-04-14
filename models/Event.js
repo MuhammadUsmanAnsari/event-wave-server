@@ -66,6 +66,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "/events/no-image.jpg",
     },
+    seatsBooked: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId
+        }],
+        default: []
+    },
     views: {
         type: [{
             type: mongoose.Schema.Types.ObjectId

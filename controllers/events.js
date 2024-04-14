@@ -106,10 +106,27 @@ const getEditEvent = async (req, res) => {
     }
 }
 
+//edit event 
+const updateEvent = async (req, res) => {
+    let { id } = req.query;
+    try {
+        let body = req.body;
+        let event = await Event.findByIdAndUpdate(id, body, { new: true });
+        if (event) {
+            return res.status(200).json({ success: true, msg: "Event Updated successfully!" })
+        } else {
+            return res.status(400).json({ success: false, message: "No event found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 module.exports = {
     addEvent,
     uploadedImage,
     getMyEvents,
     delEvent,
     getEditEvent,
+    updateEvent,
 }

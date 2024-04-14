@@ -6,6 +6,9 @@ require("dotenv").config({ path: "./config/.env" });
 const connectDB = require('./config/db');
 // middleware
 const errorHandler = require('./middlewares/errorHandlrer');
+// cron jobs
+var cron = require('node-cron');
+const CheckEventStatus = require('./crobJob/Event');
 // routes
 const authRoutes = require('./routes/user');
 const eventRoutes = require('./routes/eventRoutes');
@@ -23,8 +26,6 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use(express.static("public"));
 
-// app.use(bodyParser.json({ limit: '50mb' }));
-// app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(async (req, res, next) => {
     const apikey = req.headers.apikey;
@@ -33,6 +34,9 @@ app.use(async (req, res, next) => {
     }
     return res.status(404).json({ success: false });
 });
+
+// node cron
+cron.schedule('* * * * *', CheckEventStatus);
 
 
 app.use('/api/v1/auth', authRoutes);

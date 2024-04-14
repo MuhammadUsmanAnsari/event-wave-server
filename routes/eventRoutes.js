@@ -5,6 +5,7 @@ const {
     getMyEvents,
     delEvent,
     getEditEvent,
+    updateEvent,
 } = require('../controllers/events');
 const { protect } = require("../middlewares/auth");
 
@@ -21,7 +22,8 @@ router.route("/getMyEvents")
 
 router.route("/")
     .delete(protect("organizer"), delEvent)
-    .get(protect("organizer"), getEditEvent);
+    .get(protect("organizer"), getEditEvent)
+    .put(protect("organizer"), updateEvent);
 
 // router.route("/updateUserPassword")
 //     .put(protect("organizer", "attendee"), updateUserPassword);
