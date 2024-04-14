@@ -37,6 +37,9 @@ app.use(async (req, res, next) => {
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/event', eventRoutes);
+app.use('/', (req, res) => {
+    res.status(200).json({ msg: "helloo" })
+});
 
 app.use(errorHandler);
 
