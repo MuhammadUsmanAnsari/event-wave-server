@@ -8,6 +8,7 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middlewares/errorHandlrer');
 // routes
 const authRoutes = require('./routes/user');
+const eventRoutes = require('./routes/eventRoutes');
 
 // port
 const port = process.env.PORT || 5000;
@@ -34,7 +35,8 @@ app.use(async (req, res, next) => {
 });
 
 
-app.use('/api/v1/auth/', authRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/event', eventRoutes);
 
 app.use(errorHandler);
 

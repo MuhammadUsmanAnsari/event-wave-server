@@ -4,10 +4,7 @@ const nodemailer = require('nodemailer')
 const User = require('../models/User')
 const OTPverification = require('../models/OTPverification')
 const randomstring = require("randomstring");
-const multer = require('multer')
 const fs = require('fs')
-const uuid = require("uuid").v4;
-const trycatch = require("../middlewares/tryCatch");
 const path = require("path");
 const { v4: uuidv4 } = require('uuid');
 
@@ -324,12 +321,9 @@ const uploaded = async (req, res) => {
         let user = await User.findById(id);
         if (user) {
             if (user.image !== "/users/no-image.jpg") {
-                // Extract the filename from the existing image path
                 const existingFilename = user?.image.split('/').pop();
-                // Check if the file exists in the directory
                 const existingFilePath = path.join(__dirname, "..", 'public/users', existingFilename);
                 if (fs.existsSync(existingFilePath)) {
-                    // If the file exists, delete it
                     fs.unlinkSync(existingFilePath);
                 }
             }
@@ -340,12 +334,10 @@ const uploaded = async (req, res) => {
             const filename = `image_${uuidv4()}.png`;
             const uploadDir = path.join(__dirname, "..", 'public/users');
 
-            // Check if the upload directory exists, create it if it doesn't
             if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
             }
 
-            // Save image to file
             const filePath = path.join(uploadDir, filename);
             fs.writeFileSync(filePath, buffer);
             let fullFileName = `/users/${filename}`
