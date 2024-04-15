@@ -55,10 +55,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "Published"
     },
-    isDeleted: {
-        type: Boolean,
-        default: false,
-    },
     seats: {
         type: Number,
     },

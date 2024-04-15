@@ -62,7 +62,7 @@ const uploadedImage = async (req, res) => {
 // get my events
 const getMyEvents = async (req, res) => {
     try {
-        let data = await Event.find({ addedBy: req.user._id, isDeleted: false })
+        let data = await Event.find({ addedBy: req.user._id })
             .sort({ createdAt: -1 });
         if (data) {
             return res.status(200).json({ success: true, data })
@@ -78,10 +78,8 @@ const getMyEvents = async (req, res) => {
 const delEvent = async (req, res) => {
     let { id } = req.query;
     try {
-        let event = await Event.findById(id);
+        let event = await Event.findByIdAndDelete(id);
         if (event) {
-            event.isDeleted = true;
-            event.save();
             return res.status(200).json({ success: true, msg: "Event deleted successfully!" })
         } else {
             return res.status(400).json({ success: false, message: "No events found" })
