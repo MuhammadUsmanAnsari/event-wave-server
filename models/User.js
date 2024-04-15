@@ -36,7 +36,6 @@ const userSchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        maxlength: 100,
         default: "/users/no-image.jpg",
     },
     followers: {
