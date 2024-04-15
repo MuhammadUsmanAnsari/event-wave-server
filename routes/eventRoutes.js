@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const {
     addEvent,
-    uploadedImage,
     getMyEvents,
     delEvent,
     getEditEvent,
@@ -14,9 +13,6 @@ const { protect } = require("../middlewares/auth");
 // event management
 router.route("/add")
     .post(protect("organizer"), addEvent);
-
-router.route("/uploadImage")
-    .post(protect("organizer"), uploadedImage);
 
 router.route("/getMyEvents")
     .get(protect("organizer"), getMyEvents);

@@ -314,47 +314,6 @@ const updateUserPassword = asyncHandler(async (req, res) => {
     }
 })
 
-// upload image
-const uploaded = async (req, res) => {
-    const { id, image } = req.body;
-    try {
-        let user = await User.findById(id);
-        if (user) {
-            if (user.image !== "/users/no-image.jpg") {
-                const existingFilename = user?.image.split('/').pop();
-                const existingFilePath = path.join(__dirname, "..", 'public/users', existingFilename);
-                if (fs.existsSync(existingFilePath)) {
-                    fs.unlinkSync(existingFilePath);
-                }
-            }
-
-
-            const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
-            const buffer = Buffer.from(base64Data, 'base64');
-            const filename = `image_${uuidv4()}.png`;
-            const uploadDir = path.join(__dirname, "..", 'public/users');
-
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-
-            const filePath = path.join(uploadDir, filename);
-            fs.writeFileSync(filePath, buffer);
-            let fullFileName = `/users/${filename}`
-            user.image = fullFileName;
-            user.save();
-            return res.status(200).json({ success: true, msg: "User updated successfully" })
-        }
-
-
-
-
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ success: false, message: error.message })
-    }
-};
-
 
 
 module.exports = {
@@ -367,5 +326,4 @@ module.exports = {
     forgotPassword,
     resetPassword,
     getUser,
-    uploaded
 }

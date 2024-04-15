@@ -20,44 +20,6 @@ const addEvent = asyncHandler(async (req, res) => {
     }
 });
 
-// upload image
-const uploadedImage = async (req, res) => {
-    const { id, image } = req.body;
-    try {
-        let event = await Event.findById(id);
-        if (event) {
-            if (event.image !== "/events/no-image.jpg") {
-                const existingFilename = event?.image.split('/').pop();
-                const existingFilePath = path.join(__dirname, "..", 'public/events', existingFilename);
-                if (fs.existsSync(existingFilePath)) {
-                    fs.unlinkSync(existingFilePath);
-                }
-            }
-
-
-            const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
-            const buffer = Buffer.from(base64Data, 'base64');
-            const filename = `image_${uuidv4()}.png`;
-            const uploadDir = path.join(__dirname, "..", 'public/events');
-
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-
-            const filePath = path.join(uploadDir, filename);
-            fs.writeFileSync(filePath, buffer);
-            let fullFileName = `/events/${filename}`
-            event.image = fullFileName;
-            event.save();
-            return res.status(200).json({ success: true })
-        } else {
-            return res.status(400).json({ success: false, message: "Error in uploading image." })
-        }
-
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message })
-    }
-};
 
 // get my events
 const getMyEvents = async (req, res) => {
@@ -137,7 +99,6 @@ const getPopularEvents = async (req, res) => {
 
 module.exports = {
     addEvent,
-    uploadedImage,
     getMyEvents,
     delEvent,
     getEditEvent,
