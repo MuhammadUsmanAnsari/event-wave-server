@@ -6,6 +6,7 @@ const {
     delEvent,
     getEditEvent,
     updateEvent,
+    getPopularEvents,
 } = require('../controllers/events');
 const { protect } = require("../middlewares/auth");
 
@@ -25,8 +26,8 @@ router.route("/")
     .get(protect("organizer"), getEditEvent)
     .put(protect("organizer"), updateEvent);
 
-// router.route("/updateUserPassword")
-//     .put(protect("organizer", "attendee"), updateUserPassword);
+router.route("/popular/:type")
+    .get(protect("organizer", "attendee"), getPopularEvents);
 
 // router.route("/uploadImage")
 //     .post(protect("organizer", "attendee"), uploaded);

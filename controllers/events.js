@@ -122,6 +122,21 @@ const updateEvent = async (req, res) => {
     }
 }
 
+
+
+// get popular events by type
+const getPopularEvents = async (req, res) => {
+    const { type } = req.params;
+    try {
+
+        console.log(type);
+
+        return res.status(200).json({ success: true, data: type })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 module.exports = {
     addEvent,
     uploadedImage,
@@ -129,4 +144,5 @@ module.exports = {
     delEvent,
     getEditEvent,
     updateEvent,
+    getPopularEvents,
 }
