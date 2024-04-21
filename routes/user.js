@@ -9,7 +9,6 @@ const {
     getUser,
     updateUser,
     updateUserPassword,
-    uploaded,
 } = require('../controllers/user');
 const { protect } = require("../middlewares/auth");
 
@@ -29,9 +28,6 @@ router.route("/updateUser")
     .put(protect("organizer", "attendee"), updateUser);
 router.route("/updateUserPassword")
     .put(protect("organizer", "attendee"), updateUserPassword);
-
-router.route("/uploadImage")
-    .post(protect("organizer", "attendee"), uploaded);
 
 
 

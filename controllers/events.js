@@ -1,8 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const Event = require('../models/Event');
-const fs = require('fs');
-const path = require("path");
-const { v4: uuidv4 } = require('uuid');
+const Comment = require('../models/Comment');
+const mongoose = require('mongoose');
 
 const addEvent = asyncHandler(async (req, res) => {
     let bodyData = req.body;
@@ -20,49 +19,16 @@ const addEvent = asyncHandler(async (req, res) => {
     }
 });
 
-// upload image
-const uploadedImage = async (req, res) => {
-    const { id, image } = req.body;
-    try {
-        let event = await Event.findById(id);
-        if (event) {
-            if (event.image !== "/events/no-image.jpg") {
-                const existingFilename = event?.image.split('/').pop();
-                const existingFilePath = path.join(__dirname, "..", 'public/events', existingFilename);
-                if (fs.existsSync(existingFilePath)) {
-                    fs.unlinkSync(existingFilePath);
-                }
-            }
-
-
-            const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
-            const buffer = Buffer.from(base64Data, 'base64');
-            const filename = `image_${uuidv4()}.png`;
-            const uploadDir = path.join(__dirname, "..", 'public/events');
-
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-
-            const filePath = path.join(uploadDir, filename);
-            fs.writeFileSync(filePath, buffer);
-            let fullFileName = `/events/${filename}`
-            event.image = fullFileName;
-            event.save();
-            return res.status(200).json({ success: true })
-        } else {
-            return res.status(400).json({ success: false, message: "Error in uploading image." })
-        }
-
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message })
-    }
-};
 
 // get my events
 const getMyEvents = async (req, res) => {
     try {
-        let data = await Event.find({ addedBy: req.user._id, isDeleted: false })
+        let data = await Event.find({
+            $and: [
+                { addedBy: req.user._id },
+                { status: { $ne: "Deleted" } }
+            ]
+        })
             .sort({ createdAt: -1 });
         if (data) {
             return res.status(200).json({ success: true, data })
@@ -80,8 +46,8 @@ const delEvent = async (req, res) => {
     try {
         let event = await Event.findById(id);
         if (event) {
-            event.isDeleted = true;
-            event.save();
+            event.status = "Deleted";
+            await event.save();
             return res.status(200).json({ success: true, msg: "Event deleted successfully!" })
         } else {
             return res.status(400).json({ success: false, message: "No events found" })
@@ -92,12 +58,30 @@ const delEvent = async (req, res) => {
 }
 
 //get edit event 
-const getEditEvent = async (req, res) => {
+const getEvent = async (req, res) => {
     let { id } = req.query;
     try {
-        let event = await Event.findById(id);
+        let event = await Event.findById(id)
+            .populate("addedBy",);
         if (event) {
             return res.status(200).json({ success: true, data: event })
+        } else {
+            return res.status(404).json({ success: false, message: "No event found" })
+        }
+    } catch (error) {
+        console.log('checking=>', error);
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+//edit event 
+const updateEvent = async (req, res) => {
+    let { id } = req.query;
+    try {
+        let body = req.body;
+        let event = await Event.findByIdAndUpdate(id, body, { new: true });
+        if (event) {
+            return res.status(200).json({ success: true, msg: "Event Updated successfully!" })
         } else {
             return res.status(400).json({ success: false, message: "No event found" })
         }
@@ -106,10 +90,163 @@ const getEditEvent = async (req, res) => {
     }
 }
 
+
+
+// get popular events by type
+const getPopularEvents = async (req, res) => {
+    const { type } = req.params;
+    try {
+        const events = await Event.aggregate([
+            { $match: { category: type, status: "Published" } },
+            { $addFields: { viewsLength: { $size: "$views" } } },
+            { $sort: { viewsLength: -1 } },
+            { $limit: 6 },
+
+            // Optional: Project out the viewsLength field if you don't need it in the final result
+            // { $project: { viewsLength: 0 } }
+        ]);
+
+        if (events.length > 0) {
+            return res.status(200).json({ success: true, data: events })
+        } else {
+            return res.status(404).json({ success: false, })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Internal server error. Please try again later." })
+    }
+}
+
+
+
+// add view in event
+const addView = async (req, res) => {
+    const { id } = req.query;
+    try {
+        const event = await Event.findById(id);
+
+        if (event) {
+            let checkView = event?.views?.some(item => item.equals(req.user._id));
+            if (!checkView) {
+                event.views.push(req?.user?._id);
+                event.save()
+                return res.status(200).json({ success: true, })
+            }
+        } else {
+            return res.status(404).json({ success: false, })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Internal server error. Please try again later." })
+    }
+}
+
+// add like in event
+const addLike = async (req, res) => {
+    const { id } = req.query;
+    try {
+        const event = await Event.findById(id);
+
+        if (event) {
+            let checkLike = event?.likes?.some(item => item.equals(req.user._id));
+            if (!checkLike) {
+                event.likes.push(req?.user?._id);
+                await event.save()
+                return res.status(200).json({ success: true, msg: "Event liked successfully!" })
+            } else {
+                let filtered = event?.likes?.filter(item => item.toString() !== req.user._id.toString());
+                console.log(filtered);
+                event.likes = filtered;
+                await event.save()
+                return res.status(200).json({ success: true, msg: "Event disliked successfully!" })
+            }
+        } else {
+            return res.status(404).json({ success: false, message: "Event not exists" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Internal server error. Please try again later." })
+    }
+}
+
+// add addComment in event
+const addComment = async (req, res) => {
+    const { id } = req.query;
+    try {
+        const event = await Event.findById(id);
+
+        if (event) {
+            let body = { ...req.body, addedBy: req.user._id, eventId: event?._id }
+            const comment = await Comment.create(body);
+            event.comments.push(comment?._id);
+            await event.save()
+            return res.status(200).json({ success: true, msg: "Comment added successfully!" })
+        } else {
+            return res.status(404).json({ success: false, message: "Event not exists" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Internal server error. Please try again later." })
+    }
+}
+
+// get Comments in event
+const getComments = async (req, res) => {
+    let { limit, page, id } = req.query;
+    if (!limit) limit = 10;
+    if (!page) page = 1;
+    limit = parseInt(limit);
+    let skip = limit * (page - 1);
+
+    try {
+        const comments = await Comment.find({ eventId: id })
+            .populate("addedBy eventId")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const commentsCount = await Comment.find({ eventId: id });
+
+        if (comments.length > 0) {
+            return res.status(200).json({ success: true, data: comments, count: commentsCount.length })
+        } else {
+            return res.status(404).json({ success: false, message: "No comments found" })
+        }
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: "Internal server error. Please try again later." })
+    }
+}
+
+// delete Comment in event
+const deleteComment = async (req, res) => {
+    let { id } = req.query;
+
+    try {
+        const comment = await Comment.findById(id);
+
+        if (comment) {
+            if (comment?.addedBy.toString() == req.user._id.toString()) {
+                await Comment.findByIdAndDelete(id)
+                return res.status(200).json({ success: true, msg: "Comment deleted successfully!" })
+            } else {
+                return res.status(404).json({ success: false, message: "You can delete your own comments." })
+            }
+        } else {
+            return res.status(404).json({ success: false, message: "No comment found" })
+        }
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: "Internal server error. Please try again later." })
+    }
+}
+
 module.exports = {
     addEvent,
-    uploadedImage,
     getMyEvents,
     delEvent,
-    getEditEvent,
+    getEvent,
+    updateEvent,
+    getPopularEvents,
+    addView,
+    addLike,
+    addComment,
+    getComments,
+    deleteComment,
 }

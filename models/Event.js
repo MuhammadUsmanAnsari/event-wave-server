@@ -39,7 +39,9 @@ const userSchema = new mongoose.Schema({
     speakers: [
         {
             name: String,
-            details: String
+            profession: String,
+            details: String,
+            img: String,
         }
     ],
     ticketPrice: {
@@ -53,11 +55,7 @@ const userSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: "Published"
-    },
-    isDeleted: {
-        type: Boolean,
-        default: false,
+        default: "Draft"
     },
     seats: {
         type: Number,
@@ -66,20 +64,38 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "/events/no-image.jpg",
     },
+    seatsBooked: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }],
+        default: []
+    },
     views: {
         type: [{
-            type: mongoose.Schema.Types.ObjectId
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
         }],
         default: []
     },
     likes: {
         type: [{
-            type: mongoose.Schema.Types.ObjectId
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }],
+        default: []
+    },
+    comments: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Comment"
         }],
         default: []
     },
     addedBy: {
-        type: mongoose.Schema.Types.ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+
     }
 
 
