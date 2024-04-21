@@ -3,9 +3,14 @@ const {
     addEvent,
     getMyEvents,
     delEvent,
-    getEditEvent,
+    getEvent,
     updateEvent,
     getPopularEvents,
+    addView,
+    addLike,
+    addComment,
+    getComments,
+    deleteComment,
 } = require('../controllers/events');
 const { protect } = require("../middlewares/auth");
 
@@ -19,14 +24,21 @@ router.route("/getMyEvents")
 
 router.route("/")
     .delete(protect("organizer"), delEvent)
-    .get(protect("organizer"), getEditEvent)
+    .get(protect("organizer", "attendee"), getEvent)
     .put(protect("organizer"), updateEvent);
 
 router.route("/popular/:type")
-    .get(protect("organizer", "attendee"), getPopularEvents);
+    .get(getPopularEvents);
 
-// router.route("/uploadImage")
-//     .post(protect("organizer", "attendee"), uploaded);
+router.route("/addView")
+    .put(protect("organizer", "attendee"), addView);
+router.route("/addLike")
+    .put(protect("organizer", "attendee"), addLike);
+
+router.route("/comment")
+    .post(protect("organizer", "attendee"), addComment)
+    .get(protect("organizer", "attendee"), getComments)
+    .delete(protect("organizer", "attendee"), deleteComment);
 
 
 
