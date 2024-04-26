@@ -9,6 +9,8 @@ const {
     getUser,
     updateUser,
     updateUserPassword,
+    getUserWithId,
+    followUser,
 } = require('../controllers/user');
 const { protect } = require("../middlewares/auth");
 
@@ -22,12 +24,18 @@ router.put('/resetPassword', resetPassword)
 
 // user management
 router.route("/getUser")
-    .get(protect("organizer", "attendee"), getUser);
+    .get(protect("organizer", "attendee", "admin"), getUser);
 
 router.route("/updateUser")
     .put(protect("organizer", "attendee"), updateUser);
 router.route("/updateUserPassword")
     .put(protect("organizer", "attendee"), updateUserPassword);
+
+router.route("/getUserWithId/:id")
+    .get(protect("organizer", "attendee"), getUserWithId);
+
+router.route("/followUser/:id")
+    .post(protect("organizer", "attendee"), followUser);
 
 
 

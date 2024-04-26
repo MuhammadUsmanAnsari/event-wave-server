@@ -4,10 +4,6 @@ const nodemailer = require('nodemailer')
 const User = require('../models/User')
 const OTPverification = require('../models/OTPverification')
 const randomstring = require("randomstring");
-const fs = require('fs')
-const path = require("path");
-const { v4: uuidv4 } = require('uuid');
-
 
 
 let transporter = nodemailer.createTransport({
@@ -314,6 +310,55 @@ const updateUserPassword = asyncHandler(async (req, res) => {
     }
 })
 
+// getUserWithId
+const getUserWithId = asyncHandler(async (req, res) => {
+    let { id } = req.params;
+    try {
+        let user = await User.findById(id);
+
+        if (user) {
+            return res.status(200).json({ success: true, data: user })
+        } else {
+            return res.status(400).json({ success: false, message: "User not found." })
+        }
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+})
+
+// getUserWithId
+const followUser = asyncHandler(async (req, res) => {
+    let { id } = req.params;
+    try {
+        let user = await User.findById(id);
+
+        if (user) {
+            let checkFollow = user?.followers?.some(item => item.equals(req.user._id));
+            if (!checkFollow) {
+                user?.followers.push(req?.user?._id);
+                await user.save()
+                req?.user?.following.push(user?._id);
+                await req.user.save()
+                return res.status(200).json({ success: true, msg: "Followed successfully!" })
+            } else {
+                let filtered = user?.followers?.filter(item => item.toString() !== req.user._id.toString());
+                user.followers = filtered;
+                await user.save()
+                let filteredFollowing = req.user?.following?.filter(item => item.toString() !== user._id.toString());
+                req.user.following = filteredFollowing;
+                await req.user.save()
+                return res.status(200).json({ success: true, msg: "Unfollowed successfully!" })
+            }
+        } else {
+            return res.status(400).json({ success: false, message: "User not found." })
+        }
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+})
+
 
 
 module.exports = {
@@ -326,4 +371,6 @@ module.exports = {
     forgotPassword,
     resetPassword,
     getUser,
+    getUserWithId,
+    followUser,
 }

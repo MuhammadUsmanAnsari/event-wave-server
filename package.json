@@ -26,6 +26,7 @@
     "nodemailer": "^6.9.11",
     "nodemon": "^3.0.3",
     "randomstring": "^1.3.0",
+    "soundex-code": "^2.0.1",
     "uuid": "^9.0.1"
   }
 }

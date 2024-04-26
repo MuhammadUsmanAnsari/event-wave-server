@@ -12,6 +12,9 @@ const CheckEventStatus = require('./crobJob/Event');
 // routes
 const authRoutes = require('./routes/user');
 const eventRoutes = require('./routes/eventRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const guestsRoutes = require('./routes/guestsRoutes');
+const detailsRoutes = require('./routes/detailsRoutes');
 
 // port
 const port = process.env.PORT || 5000;
@@ -41,6 +44,10 @@ cron.schedule('* * * * *', CheckEventStatus);
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/event', eventRoutes);
+app.use('/api/v1/booking', bookingRoutes);
+app.use('/api/v1/guests', guestsRoutes);
+app.use('/api/v1/details', detailsRoutes);
+
 app.use('/', (req, res) => {
     res.status(200).json({ msg: "helloo" })
 });
