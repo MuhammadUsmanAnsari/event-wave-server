@@ -32,10 +32,10 @@ router.route("/updateUserPassword")
     .put(protect("organizer", "attendee"), updateUserPassword);
 
 router.route("/getUserWithId/:id")
-    .get(protect("organizer", "attendee"), getUserWithId);
+    .get(protect("organizer", "attendee", "admin"), getUserWithId);
 
 router.route("/followUser/:id")
-    .post(protect("organizer", "attendee"), followUser);
+    .post(protect("organizer", "attendee", "admin"), followUser);
 
 
 

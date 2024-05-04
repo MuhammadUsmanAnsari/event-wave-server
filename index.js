@@ -15,6 +15,9 @@ const eventRoutes = require('./routes/eventRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const guestsRoutes = require('./routes/guestsRoutes');
 const detailsRoutes = require('./routes/detailsRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+const blogRoutes = require('./routes/blogRoutes');
 
 // port
 const port = process.env.PORT || 5000;
@@ -47,6 +50,9 @@ app.use('/api/v1/event', eventRoutes);
 app.use('/api/v1/booking', bookingRoutes);
 app.use('/api/v1/guests', guestsRoutes);
 app.use('/api/v1/details', detailsRoutes);
+app.use('/api/v1/feedback', feedbackRoutes);
+app.use('/api/v1/contact', contactRoutes);
+app.use('/api/v1/blog', blogRoutes);
 
 app.use('/', (req, res) => {
     res.status(200).json({ msg: "helloo" })

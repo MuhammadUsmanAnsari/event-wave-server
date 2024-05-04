@@ -88,6 +88,9 @@ const userSchema = new mongoose.Schema({
     },
     resetPassToken: {
         type: String
+    },
+    gender: {
+        type: String
     }
 
 },

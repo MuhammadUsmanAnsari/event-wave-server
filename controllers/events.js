@@ -354,6 +354,153 @@ const getPendingEvents = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message })
     }
 }
+
+// get upcoming events
+const getUpcomingEvents = async (req, res) => {
+    let { limit, page } = req.query;
+    if (!limit) limit = 10;
+    if (!page) page = 1;
+    limit = parseInt(limit);
+    let skip = limit * (page - 1);
+    try {
+
+        const data = await Event.aggregate([
+            {
+                $match: {
+                    date: getNextWeekDates(),
+                    status: "Published"
+                }
+            },
+            {
+                $sort: { date: 1 }
+            },
+            {
+                $skip: skip
+            },
+            {
+                $limit: limit
+            },
+        ]);
+
+        const dataCount = await Event.aggregate([
+            {
+                $match: {
+                    date: getNextWeekDates(),
+                    status: "Published"
+                }
+            },
+        ]);
+
+        if (data) {
+            return res.status(200).json({ success: true, data, count: dataCount.length })
+        } else {
+            return res.status(400).json({ success: false, message: "No events found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const getNextWeekDates = () => {
+    const now = moment();
+    const nextWeek = moment().add(2, 'week');
+    return { $gte: now.toDate(), $lt: nextWeek.toDate() };
+};
+
+
+// get upcoming events
+const getEventsUsingCategory = async (req, res) => {
+    let { category, limit, page } = req.query;
+    if (!limit) limit = 10;
+    if (!page) page = 1;
+    limit = parseInt(limit);
+    let skip = limit * (page - 1);
+
+    try {
+        const data = await Event.aggregate([
+            {
+                $match: {
+                    category,
+                    status: "Published"
+                }
+            },
+            {
+                $sort: { date: 1 }
+            },
+            {
+                $skip: skip
+            },
+            {
+                $limit: limit
+            },
+        ]);
+        const dataCount = await Event.aggregate([
+            {
+                $match: {
+                    category,
+                    status: "Published"
+                }
+            },
+        ]);
+
+        if (data) {
+            return res.status(200).json({ success: true, data, count: dataCount.length })
+        } else {
+            return res.status(400).json({ success: false, message: "No events found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+//  get Events Pictures
+const getEventsPictures = async (req, res) => {
+    let { more } = req.query;
+    try {
+        let data = [];
+        if (more == "true") {
+            data = await Event.aggregate([
+                {
+                    $match: {
+                        image: { $exists: true, $ne: null } // Filter documents where the image field exists and is not null
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0, // Exclude the _id field
+                        image: 1 // Include only the image field
+                    }
+                }
+            ])
+        } else {
+            data = await Event.aggregate([
+                {
+                    $match: {
+                        image: { $exists: true, $ne: null } // Filter documents where the image field exists and is not null
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0, // Exclude the _id field
+                        image: 1 // Include only the image field
+                    }
+                },
+                {
+                    $limit: 10
+                }
+            ])
+        }
+
+        if (data) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No images found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 module.exports = {
     addEvent,
     getMyEvents,
@@ -369,4 +516,7 @@ module.exports = {
     rejectEventByAdmin,
     publishEventByAdmin,
     getPendingEvents,
+    getUpcomingEvents,
+    getEventsUsingCategory,
+    getEventsPictures,
 }
