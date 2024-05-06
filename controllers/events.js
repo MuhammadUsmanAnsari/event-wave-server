@@ -501,6 +501,42 @@ const getEventsPictures = async (req, res) => {
     }
 }
 
+// get pending events
+const getMyLikedEvents = async (req, res) => {
+    try {
+        let data = await Event.aggregate([
+            {
+                $match: {
+                    "likes": { $elemMatch: { $eq: req.user._id } }
+                },
+            }
+        ]);
+
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No events found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+// get pending events
+const getMyEventComments = async (req, res) => {
+    try {
+        let data = await Comment.find({ addedBy: req.user._id })
+            .populate("eventId");
+
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No events found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
 module.exports = {
     addEvent,
     getMyEvents,
@@ -519,4 +555,6 @@ module.exports = {
     getUpcomingEvents,
     getEventsUsingCategory,
     getEventsPictures,
+    getMyLikedEvents,
+    getMyEventComments,
 }

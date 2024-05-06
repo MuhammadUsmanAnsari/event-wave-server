@@ -17,6 +17,8 @@ const {
     getUpcomingEvents,
     getEventsUsingCategory,
     getEventsPictures,
+    getMyLikedEvents,
+    getMyEventComments,
 } = require('../controllers/events');
 const { protect } = require("../middlewares/auth");
 
@@ -51,6 +53,14 @@ router.route("/comment")
     .post(protect("organizer", "attendee"), addComment)
     .get(protect("organizer", "attendee"), getComments)
     .delete(protect("organizer", "attendee"), deleteComment);
+
+
+router.route("/getMyLikedEvents")
+    .get(protect("organizer", "attendee"), getMyLikedEvents);
+
+router.route("/getMyEventComments")
+    .get(protect("organizer", "attendee"), getMyEventComments);
+
 
 // admin routes
 router.route("/rejectEventByAdmin")

@@ -304,6 +304,41 @@ const deleteComment = async (req, res) => {
 }
 
 
+const getMyLikedBlogs = async (req, res) => {
+    try {
+        let data = await Blog.aggregate([
+            {
+                $match: {
+                    "likes": { $elemMatch: { $eq: req.user._id } }
+                },
+            }
+        ]);
+        console.log(data);
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No blogs found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const getMyBlogComments = async (req, res) => {
+    try {
+        let data = await CommentBlog.find({ addedBy: req.user._id })
+            .populate("blogId");
+
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No blogs found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 module.exports = {
     addBlog,
     getMyBlogs,
@@ -317,4 +352,6 @@ module.exports = {
     getComments,
     addComment,
     deleteComment,
+    getMyLikedBlogs,
+    getMyBlogComments,
 }

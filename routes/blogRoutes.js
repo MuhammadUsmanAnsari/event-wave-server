@@ -12,6 +12,8 @@ const {
     getComments,
     addComment,
     deleteComment,
+    getMyLikedBlogs,
+    getMyBlogComments,
 } = require('../controllers/blog');
 const { protect } = require("../middlewares/auth");
 
@@ -40,6 +42,12 @@ router.route("/comment")
     .post(protect("organizer", "attendee"), addComment)
     .get(protect("organizer", "attendee"), getComments)
     .delete(protect("organizer", "attendee"), deleteComment);
+
+router.route("/getMyLikedBlogs")
+    .get(protect("organizer", "attendee"), getMyLikedBlogs);
+router.route("/getMyBlogComments")
+    .get(protect("organizer", "attendee"), getMyBlogComments);
+
 
 
 module.exports = router;
