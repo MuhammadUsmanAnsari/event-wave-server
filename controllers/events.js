@@ -1,8 +1,10 @@
 const asyncHandler = require('express-async-handler')
 const Event = require('../models/Event');
+const TicketReservation = require('../models/TicketReservation');
 const Comment = require('../models/Comment');
 const nodemailer = require('nodemailer')
 const moment = require("moment");
+const mongoose = require("mongoose");
 
 
 let transporter = nodemailer.createTransport({
@@ -537,6 +539,96 @@ const getMyEventComments = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message })
     }
 }
+
+const getMyUpcomingEvents = async (req, res) => {
+    try {
+        let events = await TicketReservation.find({ addedBy: req.user._id })
+            .populate("eventId");
+
+        let data = [];
+        for (const event of events) {
+            const dateFromMongoDB = new Date(event?.eventId?.date);
+            const timeStr = event?.eventId?.time[1]; // Assuming timeStr is the time string you mentioned: '01:16'
+            const datetime = moment(dateFromMongoDB).format('YYYY-MM-DD') + 'T' + timeStr + ':00.000';
+
+            const eventDate = moment(datetime);
+            if (eventDate.isAfter(moment())) {
+                data.push(event);
+            }
+        }
+        data.sort((a, b) => {
+            const dateA = new Date(a.eventId.date);
+            const dateB = new Date(b.eventId.date);
+            return dateA - dateB;
+        });
+
+
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No events found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const getMyPastEvents = async (req, res) => {
+    try {
+        let events = await TicketReservation.find({ addedBy: req.user._id })
+            .populate("eventId");
+
+        let data = [];
+        for (const event of events) {
+            const dateFromMongoDB = new Date(event?.eventId?.date);
+            const timeStr = event?.eventId?.time[1]; // Assuming timeStr is the time string you mentioned: '01:16'
+            const datetime = moment(dateFromMongoDB).format('YYYY-MM-DD') + 'T' + timeStr + ':00.000';
+
+            const eventDate = moment(datetime);
+            if (eventDate.isBefore(moment())) {
+                data.push(event);
+            }
+        }
+        data.sort((a, b) => {
+            const dateA = new Date(a.eventId.date);
+            const dateB = new Date(b.eventId.date);
+            return dateA - dateB;
+        });
+
+
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No events found" })
+        }
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const getOrganizerEventsUsingCategory = async (req, res) => {
+    let { category, organizerId } = req.query;
+    try {
+        const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+        const organizerObjectId = isValidObjectId(organizerId) ? new mongoose.Types.ObjectId(organizerId) : null;
+
+        let data = await Event.find({ addedBy: organizerObjectId, category, status: "Published" })
+            .populate("addedBy")
+            .sort({ date: 1 });
+
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No events found" })
+        }
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+
 module.exports = {
     addEvent,
     getMyEvents,
@@ -557,4 +649,7 @@ module.exports = {
     getEventsPictures,
     getMyLikedEvents,
     getMyEventComments,
+    getMyUpcomingEvents,
+    getMyPastEvents,
+    getOrganizerEventsUsingCategory,
 }

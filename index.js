@@ -42,7 +42,7 @@ app.use(async (req, res, next) => {
 });
 
 // node cron
-cron.schedule('* * * * *', CheckEventStatus);
+cron.schedule('*/2 * * * *', CheckEventStatus);
 
 
 app.use('/api/v1/auth', authRoutes);

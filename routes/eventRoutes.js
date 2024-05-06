@@ -19,6 +19,9 @@ const {
     getEventsPictures,
     getMyLikedEvents,
     getMyEventComments,
+    getMyUpcomingEvents,
+    getMyPastEvents,
+    getOrganizerEventsUsingCategory,
 } = require('../controllers/events');
 const { protect } = require("../middlewares/auth");
 
@@ -60,6 +63,15 @@ router.route("/getMyLikedEvents")
 
 router.route("/getMyEventComments")
     .get(protect("organizer", "attendee"), getMyEventComments);
+
+router.route("/getMyUpcomingEvents")
+    .get(protect("organizer", "attendee"), getMyUpcomingEvents);
+
+router.route("/getMyPastEvents")
+    .get(protect("organizer", "attendee"), getMyPastEvents);
+
+router.route("/organizer-events-using-category")
+    .get(protect("organizer", "attendee"), getOrganizerEventsUsingCategory);
 
 
 // admin routes
