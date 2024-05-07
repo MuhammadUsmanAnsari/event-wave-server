@@ -265,7 +265,9 @@ const resetPassword = asyncHandler(async (req, res) => {
 // get user data
 const getUser = asyncHandler(async (req, res) => {
     try {
-        return res.status(200).json({ data: req.user })
+        let data = await User.findById(req.user._id)
+            .populate("followers following");
+        return res.status(200).json({ data })
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message })
     }
@@ -314,7 +316,8 @@ const updateUserPassword = asyncHandler(async (req, res) => {
 const getUserWithId = asyncHandler(async (req, res) => {
     let { id } = req.params;
     try {
-        let user = await User.findById(id);
+        let user = await User.findById(id)
+            .populate("followers following");
 
         if (user) {
             return res.status(200).json({ success: true, data: user })
@@ -331,6 +334,9 @@ const getUserWithId = asyncHandler(async (req, res) => {
 const followUser = asyncHandler(async (req, res) => {
     let { id } = req.params;
     try {
+        if (req?.user?._id?.toString() === id?.toString()) {
+            return res.status(400).json({ success: false, message: "You can't follow yourself" })
+        }
         let user = await User.findById(id);
 
         if (user) {

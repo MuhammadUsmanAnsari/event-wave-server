@@ -38,12 +38,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "/users/no-image.jpg",
     },
-    followers: {
-        type: Array,
-    },
-    following: {
-        type: Array,
-    },
+    followers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    following: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     facebookLink: {
         type: String,
     },

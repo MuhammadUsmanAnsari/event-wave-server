@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler')
 const Event = require('../models/Event');
+const User = require('../models/User');
 const TicketReservation = require('../models/TicketReservation');
 const Comment = require('../models/Comment');
 const nodemailer = require('nodemailer')
@@ -318,8 +319,10 @@ const publishEventByAdmin = async (req, res) => {
                 html: `<p>Dear ${event?.addedBy?.fullName}, </b>
                 <br />
                 <p>We are delighted to inform you that your event, "${event?.title}," scheduled to take place on ${moment(event?.date).format('MMM D, YYYY')} in ${event?.country}, ${event?.city}, has been successfully published on our platform.</p>
-                <br />
                 <p>Your event has been approved by our administration team after a thorough review, and it now appears live on our website for attendees to discover and participate in.</p>
+                    <div>
+                    <a href=${process.env.REACT_APP_EVENT_WAVE_URL + `event/details/${event?._id}`}>View Event</a>                            
+                    </div>
                 <br/>                
                 <p>Thank you for choosing our platform to host your event. We wish you great success and look forward to seeing a fantastic turnout!</p>               
                 <br />                
@@ -331,6 +334,38 @@ const publishEventByAdmin = async (req, res) => {
             await transporter.sendMail(mailOptions);
             event.status = "Published";
             await event.save();
+
+            // sending email to followers
+            let userFollowers = event?.addedBy?.followers;
+
+            userFollowers.forEach(async (element) => {
+                let user = await User.findById(element);
+
+                const mailOptions = {
+                    from: {
+                        name: "Event Wave",
+                        address: process.env.AUTH_EMAIL,
+                    },
+                    to: user?.email,
+                    subject: "New Event Alert",
+                    html: `<p>Dear ${user?.fullName}, </b>
+                        <br />
+                        <p>We hope this message finds you well and filled with excitement for the latest updates from your favorite organizer, <b>${event?.addedBy?.fullName}</b>!</p>
+                        <br />
+                        <p>We're thrilled to inform you that <b>${event?.addedBy?.fullName}</b> has just announced a brand new event that we know you won't want to miss. Whether you've been eagerly anticipating their next gathering or are new to their events, this is an opportunity you won't want to pass up!</p>
+                        <br/>                
+                        <p>
+                            To learn more about this exciting event and secure your spot, simply click the link below:
+                            <a href=${process.env.REACT_APP_EVENT_WAVE_URL + `event/details/${event?._id}`}>View Event</a>                            
+                        </p >               
+                        <br />                
+                        <p>Don't miss out on the chance to be a part of this unforgettable experience hosted by <b>${event?.addedBy?.fullName}</b>. Mark your calendar, spread the word, and get ready for an incredible time filled with music, laughter, and unforgettable memories!</p>
+                       `
+                }
+
+                await transporter.sendMail(mailOptions);
+            });
+
             return res.status(200).json({ success: true, msg: "Event published successfully!" })
         } else {
             return res.status(404).json({ success: false, message: "Event not found" })
