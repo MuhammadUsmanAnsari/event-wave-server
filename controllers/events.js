@@ -366,7 +366,7 @@ const publishEventByAdmin = async (req, res) => {
                 await transporter.sendMail(mailOptions);
             });
 
-            return res.status(200).json({ success: true, msg: "Event published successfully!" })
+            return res.status(200).json({ success: true, msg: "Event published successfully!", link: process.env.REACT_APP_EVENT_WAVE_URL })
         } else {
             return res.status(404).json({ success: false, message: "Event not found" })
         }
