@@ -103,7 +103,11 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email })
-    if (!user.isVerified) {
+
+    if (!user) {
+        return res.status(404).json({ message: "User not found with this email." })
+    }
+    if (!user?.isVerified) {
         return res.status(403).json({ message: "Please verify your email." })
     }
     if (user && (await bcrypt.compare(password, user.password))) {

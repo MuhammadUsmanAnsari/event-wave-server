@@ -1,6 +1,7 @@
 
 const Event = require('../models/Event');
 const TicketReservation = require('../models/TicketReservation');
+const moment = require('moment');
 
 
 // add Reservation 
@@ -9,9 +10,22 @@ const addReservation = async (req, res) => {
 
     try {
         let event = await Event.findById(id)
-        const bookedSeats = event?.seatsBooked?.reduce((acc, currentItem) => acc + currentItem.seats, 0);       
+        const bookedSeats = event?.seatsBooked?.reduce((acc, currentItem) => acc + currentItem.seats, 0);
 
         if (event && event.seats > bookedSeats && event.status === "Published") {
+            const currentDateAndTime = moment();
+            const dateFromMongoDB = new Date(event?.date);
+            const timeStr = event?.time[0];
+            // const dateTimeFromEntry = moment(`${event?.date} ${event?.time[0]}`, 'YYYY-MM-DD HH:mm'); // Example date and time, replace it with your entry
+            const dateTimeFromEntry = moment(dateFromMongoDB).format('YYYY-MM-DD') + 'T' + timeStr + ':00.000';
+            const eventDate = moment(dateTimeFromEntry);
+
+            // Compare the dates
+            const isInFuture = eventDate.isAfter(currentDateAndTime);
+            if (!isInFuture) {
+                return res.status(400).json({ success: false, message: "You can't book this event because event is started already." })
+            }
+
             let body = {
                 ...req.body,
                 addedBy: req.user._id,

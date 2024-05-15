@@ -663,6 +663,50 @@ const getOrganizerEventsUsingCategory = async (req, res) => {
     }
 }
 
+const searchEvents = async (req, res) => {
+    let { country, category, date, limit, page } = req.query;
+    if (!limit) limit = 10;
+    if (!page) page = 1;
+    limit = parseInt(limit);
+    let skip = limit * (page - 1);
+
+    try {
+        date = new Date(date);
+        let data = await Event.find({ country, category, date, status: "Published" })
+            .populate("addedBy")
+            .sort({ date: 1 })
+            .skip(skip)
+            .limit(limit);
+
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false, message: "No events found" })
+        }
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+const viewAttendeesOfEvent = async (req, res) => {
+    let { eventId } = req.query;
+    try {
+        let data = await TicketReservation.find({ eventId })
+            .populate("addedBy")
+            .sort({ date: 1 });
+
+        if (data.length > 0) {
+            return res.status(200).json({ success: true, data })
+        } else {
+            return res.status(400).json({ success: false })
+        }
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 
 module.exports = {
     addEvent,
@@ -687,4 +731,6 @@ module.exports = {
     getMyUpcomingEvents,
     getMyPastEvents,
     getOrganizerEventsUsingCategory,
+    searchEvents,
+    viewAttendeesOfEvent,
 }

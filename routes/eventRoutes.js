@@ -22,16 +22,18 @@ const {
     getMyUpcomingEvents,
     getMyPastEvents,
     getOrganizerEventsUsingCategory,
+    searchEvents,
+    viewAttendeesOfEvent,
 } = require('../controllers/events');
 const { protect } = require("../middlewares/auth");
 
 
 // event management
 router.route("/add")
-    .post(protect("organizer"), addEvent);
+    .post(protect("organizer", "admin"), addEvent);
 
 router.route("/getMyEvents")
-    .get(protect("organizer"), getMyEvents);
+    .get(protect("organizer", "admin"), getMyEvents);
 
 router.route("/")
     .delete(protect("organizer", "admin"), delEvent)
@@ -72,6 +74,12 @@ router.route("/getMyPastEvents")
 
 router.route("/organizer-events-using-category")
     .get(protect("organizer", "attendee"), getOrganizerEventsUsingCategory);
+
+router.route("/search")
+    .get(protect("organizer", "attendee", "admin"), searchEvents);
+
+router.route("/view-attendees-of-event")
+    .get(protect("organizer", "attendee", "admin"), viewAttendeesOfEvent);
 
 
 // admin routes
