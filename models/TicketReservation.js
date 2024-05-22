@@ -10,6 +10,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    transactionId: {
+        type: String,
+    },
     phone: {
         type: Number,
         trim: true

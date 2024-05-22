@@ -2,6 +2,8 @@
 const Event = require('../models/Event');
 const TicketReservation = require('../models/TicketReservation');
 const moment = require('moment');
+const stripe = require("stripe")(process.env.stripe_key);
+const { v4: uuidv4 } = require("uuid");
 
 
 // add Reservation 
@@ -96,7 +98,53 @@ const getMyBookedSeats = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message })
     }
 }
+
+const makePayment = async (req, res) => {
+    try {
+        const { token, amount } = req.body;
+        const customer = await stripe.customers.create({
+            email: token.email,
+            source: token.id,
+        });
+
+        const payment = await stripe.charges.create(
+            {
+                amount: amount,
+                currency: 'GBP',
+                customer: customer.id,
+                receipt_email: token.email,
+            },
+            {
+                idempotencyKey: uuidv4(), //ensure we do not charge the same customer multiple times with the same transaction id
+                //unique
+            }
+        );
+        if (payment) {
+            res.status(200).send({
+                message: "Payment successful",
+                data: {
+                    transactionId: payment.source.id,
+                },
+                success: true,
+            });
+        } else {
+            res.status(500).send({
+                message: "Payment failed",
+                data: error,
+                success: false,
+            });
+        }
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send({
+            message: "Payment failed",
+            data: error,
+            success: false,
+        });
+    }
+}
 module.exports = {
     addReservation,
     getMyBookedSeats,
+    makePayment,
 }
